@@ -1,0 +1,867 @@
+<style>
+/* ============ tokens ============ */
+:root{
+  color-scheme: light dark;
+  --bg: oklch(96% .008 230);
+  --surface: oklch(99% .003 230);
+  --surface-2: oklch(93.5% .01 230);
+  --ink: oklch(24% .03 240);
+  --ink-2: oklch(45% .025 238);
+  --ink-3: oklch(62% .02 236);
+  --line: oklch(88% .012 230);
+  --court: oklch(45% .09 235);
+  --court-deep: oklch(39% .085 237);
+  --court-line: rgba(255,255,255,.72);
+  --on-court: rgba(255,255,255,.92);
+  --on-court-dim: rgba(255,255,255,.6);
+  --volt: oklch(89% .19 122);
+  --volt-strong: oklch(85% .2 122);
+  --volt-ink: oklch(23% .05 130);
+  --danger: oklch(52% .17 26);
+  --danger-soft: oklch(95% .03 26);
+  --shadow-card: 0 1px 3px rgba(15,35,52,.10), 0 6px 18px rgba(15,35,52,.06);
+  --shadow-pop: 0 2px 6px rgba(15,35,52,.16), 0 10px 28px rgba(15,35,52,.12);
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg: oklch(17% .015 240);
+    --surface: oklch(22% .018 238);
+    --surface-2: oklch(27% .02 238);
+    --ink: rgba(255,255,255,.9);
+    --ink-2: rgba(255,255,255,.62);
+    --ink-3: rgba(255,255,255,.42);
+    --line: rgba(255,255,255,.09);
+    --court: oklch(41% .085 236);
+    --court-deep: oklch(35% .08 238);
+    --volt: oklch(85% .19 122);
+    --volt-strong: oklch(80% .19 122);
+    --danger: oklch(62% .16 26);
+    --danger-soft: oklch(28% .05 26);
+    --shadow-card: 0 1px 3px rgba(0,0,0,.4);
+    --shadow-pop: 0 4px 16px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg: oklch(17% .015 240);
+  --surface: oklch(22% .018 238);
+  --surface-2: oklch(27% .02 238);
+  --ink: rgba(255,255,255,.9);
+  --ink-2: rgba(255,255,255,.62);
+  --ink-3: rgba(255,255,255,.42);
+  --line: rgba(255,255,255,.09);
+  --court: oklch(41% .085 236);
+  --court-deep: oklch(35% .08 238);
+  --volt: oklch(85% .19 122);
+  --volt-strong: oklch(80% .19 122);
+  --danger: oklch(62% .16 26);
+  --danger-soft: oklch(28% .05 26);
+  --shadow-card: 0 1px 3px rgba(0,0,0,.4);
+  --shadow-pop: 0 4px 16px rgba(0,0,0,.5);
+}
+:root[data-theme="light"]{
+  --bg: oklch(96% .008 230);
+  --surface: oklch(99% .003 230);
+  --surface-2: oklch(93.5% .01 230);
+  --ink: oklch(24% .03 240);
+  --ink-2: oklch(45% .025 238);
+  --ink-3: oklch(62% .02 236);
+  --line: oklch(88% .012 230);
+  --court: oklch(45% .09 235);
+  --court-deep: oklch(39% .085 237);
+  --volt: oklch(89% .19 122);
+  --volt-strong: oklch(85% .2 122);
+  --danger: oklch(52% .17 26);
+  --danger-soft: oklch(95% .03 26);
+  --shadow-card: 0 1px 3px rgba(15,35,52,.10), 0 6px 18px rgba(15,35,52,.06);
+  --shadow-pop: 0 2px 6px rgba(15,35,52,.16), 0 10px 28px rgba(15,35,52,.12);
+}
+
+/* ============ base ============ */
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei",system-ui,sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  touch-action:manipulation;
+}
+button{ font:inherit; color:inherit; border:0; background:none; padding:0; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+button:focus-visible, input:focus-visible{ outline:2px solid var(--court); outline-offset:2px; border-radius:4px; }
+input{ font:inherit; color:inherit; }
+
+#app{ max-width:560px; margin:0 auto; padding:14px 14px calc(86px + env(safe-area-inset-bottom)); }
+
+/* ============ header ============ */
+.top{ display:flex; align-items:center; justify-content:space-between; padding:4px 2px 14px; }
+.brand{ display:flex; flex-direction:column; gap:1px; }
+.brand .eyebrow{ font-size:10px; font-weight:700; letter-spacing:.18em; color:var(--ink-3); text-transform:uppercase; }
+.brand h1{ margin:0; font-size:21px; font-weight:900; letter-spacing:-.012em; display:flex; align-items:center; gap:7px; }
+.brand h1::after{ content:""; width:10px; height:10px; border-radius:50%; background:var(--volt); box-shadow:0 0 0 3px color-mix(in oklab, var(--volt) 28%, transparent); }
+.top-meta{ text-align:right; font-size:12px; color:var(--ink-2); display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.round-chip{ background:var(--court); color:#fff; font-weight:800; font-size:12px; padding:3px 10px; border-radius:999px; font-variant-numeric:tabular-nums; }
+
+.warn-strip{ background:var(--danger-soft); color:var(--danger); font-size:12.5px; font-weight:600; border-radius:var(--r-sm); padding:8px 12px; margin-bottom:12px; }
+
+/* ============ tabs ============ */
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  background:var(--surface); border-top:1px solid var(--line);
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+}
+.tabbar-inner{ max-width:560px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+.tab{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:7px 0 5px; border-radius:var(--r-md); color:var(--ink-3);
+  font-size:11.5px; font-weight:700;
+  transition:transform .12s ease, background-color .15s ease, color .15s ease;
+}
+.tab svg{ width:21px; height:21px; }
+.tab:active{ transform:scale(.95); }
+.tab.on{ background:var(--surface-2); color:var(--ink); }
+.tab.on svg{ color:var(--court); }
+:root[data-theme="dark"] .tab.on svg, .dark-svg-fallback{ color:inherit; }
+
+/* ============ generic ============ */
+.card{ background:var(--surface); border-radius:var(--r-lg); box-shadow:var(--shadow-card); }
+.section-label{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); margin:18px 4px 8px; }
+.hidden{ display:none !important; }
+
+/* ============ settings strip ============ */
+.setup{ padding:14px; display:flex; flex-direction:column; gap:12px; }
+.setup-row{ display:flex; gap:10px; align-items:stretch; }
+.setup-block{ flex:1; display:flex; flex-direction:column; gap:6px; }
+.setup-block .lbl{ font-size:11px; font-weight:800; letter-spacing:.12em; color:var(--ink-3); text-transform:uppercase; }
+.stepper{ display:flex; align-items:center; gap:0; background:var(--surface-2); border-radius:var(--r-md); overflow:hidden; height:46px; }
+.stepper button{ width:46px; height:46px; font-size:22px; font-weight:800; color:var(--ink-2); display:flex; align-items:center; justify-content:center; transition:transform .1s ease; }
+.stepper button:active{ transform:scale(.88); }
+.stepper .num{ flex:1; text-align:center; font-size:19px; font-weight:900; font-variant-numeric:tabular-nums; }
+.seg{ display:flex; background:var(--surface-2); border-radius:var(--r-md); padding:3px; height:46px; }
+.seg button{ flex:1; border-radius:calc(var(--r-md) - 3px); font-size:14px; font-weight:700; color:var(--ink-2); transition:background-color .15s ease, color .15s ease, transform .1s ease; }
+.seg button:active{ transform:scale(.96); }
+.seg button.on{ background:var(--court); color:#fff; font-weight:800; }
+.chk{
+  display:flex; align-items:center; gap:9px; height:46px; padding:0 13px;
+  background:var(--surface-2); border-radius:var(--r-md);
+  font-size:14px; font-weight:700; color:var(--ink-2); width:100%;
+  transition:transform .1s ease;
+}
+.chk:active{ transform:scale(.97); }
+.chk .box{ width:21px; height:21px; border-radius:6px; border:2px solid var(--ink-3); display:flex; align-items:center; justify-content:center; flex:none; transition:background-color .15s ease, border-color .15s ease; }
+.chk.on{ color:var(--ink); }
+.chk.on .box{ background:var(--court); border-color:var(--court); }
+.chk .box svg{ width:13px; height:13px; color:#fff; opacity:0; transform:scale(.4); transition:opacity .15s ease, transform .15s ease; }
+.chk.on .box svg{ opacity:1; transform:scale(1); }
+.cap-hint{ font-size:12.5px; color:var(--ink-2); text-align:center; font-variant-numeric:tabular-nums; }
+
+/* ============ primary / ghost buttons ============ */
+.btn-primary{
+  width:100%; height:56px; border-radius:999px;
+  background:var(--volt); color:var(--volt-ink);
+  font-size:17px; font-weight:900; letter-spacing:.02em;
+  box-shadow:var(--shadow-pop);
+  transition:transform .12s ease, filter .15s ease;
+  margin-top:12px;
+}
+.btn-primary:active{ transform:scale(.97); }
+@media(hover:hover){ .btn-primary:hover{ filter:brightness(1.04); } }
+.btn-primary.armed{ background:var(--danger); color:#fff; font-size:15px; }
+.btn-row{ display:flex; gap:10px; margin-top:10px; }
+.btn-ghost{
+  flex:1; height:46px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line);
+  font-size:14px; font-weight:700; color:var(--ink-2);
+  box-shadow:0 1px 2px rgba(15,35,52,.06);
+  transition:transform .12s ease, background-color .15s ease;
+}
+.btn-ghost:active{ transform:scale(.96); }
+@media(hover:hover){ .btn-ghost:hover{ background:var(--surface-2); } }
+.btn-ghost.armed{ background:var(--danger); border-color:var(--danger); color:#fff; }
+.btn-danger-line{ color:var(--danger); }
+
+/* ============ court card ============ */
+.courts{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:16px; }
+@media(min-width:540px){ .courts.multi{ grid-template-columns:1fr 1fr; } }
+.court{
+  background:var(--court); border-radius:var(--r-lg); padding:10px;
+  box-shadow:var(--shadow-card);
+}
+.court-head{ display:flex; justify-content:space-between; align-items:center; padding:2px 6px 8px; }
+.court-name{ color:var(--on-court); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.court-status{ font-size:11px; font-weight:700; color:var(--on-court-dim); }
+.court-status.done{ color:var(--volt); }
+.bounds{ border:2px solid var(--court-line); border-radius:12px; overflow:hidden; background:var(--court-deep); position:relative; }
+.half{ position:relative; padding:16px 14px 14px; display:flex; flex-direction:column; gap:11px; transition:opacity .25s ease; }
+.half::after{ content:""; position:absolute; left:9%; right:9%; border-top:1.5px solid rgba(255,255,255,.22); }
+.half.h-top::after{ bottom:0; margin-bottom:14px; }
+.half.h-bot::after{ top:0; margin-top:14px; }
+.half.loser{ opacity:.5; }
+.half.winner{ background:color-mix(in oklab, var(--volt) 16%, transparent); }
+.team{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+.pchip{
+  background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.3);
+  color:var(--on-court); border-radius:999px; padding:7px 15px;
+  font-size:16px; font-weight:800; letter-spacing:.01em; max-width:46%;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.winbtn{
+  align-self:center; min-width:132px; height:42px; padding:0 20px; border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.55); color:var(--on-court);
+  font-size:14px; font-weight:800;
+  transition:transform .12s ease, background-color .15s ease;
+}
+.winbtn:active{ transform:scale(.95); }
+@media(hover:hover){ .winbtn:hover{ background:rgba(255,255,255,.12); } }
+.wonmark{
+  align-self:center; height:42px; display:flex; align-items:center; gap:6px;
+  padding:0 20px; border-radius:999px; background:var(--volt); color:var(--volt-ink);
+  font-size:14px; font-weight:900;
+}
+.lostmark{ align-self:center; height:42px; display:flex; align-items:center; padding:0 12px; color:var(--on-court-dim); font-size:13px; font-weight:700; }
+.net{ position:relative; border-top:3px dashed rgba(255,255,255,.65); }
+.net .ball{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:15px; height:15px; border-radius:50%; background:var(--volt);
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.winner .team .pchip{ border-color:color-mix(in oklab, var(--volt) 70%, transparent); }
+
+/* deal-in animation */
+@keyframes dealIn{ from{ opacity:0; transform:translateY(16px) scale(.98); } to{ opacity:1; transform:none; } }
+.deal{ animation:dealIn .45s cubic-bezier(.16,1,.3,1) both; }
+@keyframes winFlash{ 0%{ opacity:0; } 35%{ opacity:1; } 100%{ opacity:0; } }
+.half.winner::before{ content:""; position:absolute; inset:0; background:color-mix(in oklab, var(--volt) 55%, transparent); opacity:0; pointer-events:none; }
+.half.winner.justwon::before{ animation:winFlash .55s ease-out; }
+
+/* ============ sitters ============ */
+.sitters{ padding:14px 16px; margin-top:14px; }
+.sitters .sit-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; }
+.sitters .t{ font-size:13px; font-weight:800; color:var(--ink); }
+.sitters .n{ font-size:11.5px; color:var(--ink-3); }
+.sit-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+.schip{ background:var(--surface-2); color:var(--ink-2); border-radius:999px; padding:5px 13px; font-size:13.5px; font-weight:700; }
+
+/* ============ empty state ============ */
+.empty{ padding:34px 22px; text-align:center; margin-top:16px; }
+.empty .big{ font-size:16px; font-weight:800; margin-bottom:6px; }
+.empty p{ margin:0; font-size:13.5px; color:var(--ink-2); }
+
+/* ============ players ============ */
+.addbar{ display:flex; gap:9px; margin-bottom:14px; }
+.addbar input{
+  flex:1; height:50px; border-radius:var(--r-md); border:1.5px solid var(--line);
+  background:var(--surface); padding:0 15px; font-size:15px; min-width:0;
+}
+.addbar input::placeholder{ color:var(--ink-3); }
+.addbar button{
+  width:88px; height:50px; border-radius:var(--r-md);
+  background:var(--court); color:#fff; font-size:15px; font-weight:800; flex:none;
+  transition:transform .12s ease;
+}
+.addbar button:active{ transform:scale(.95); }
+.pcount{ font-size:12.5px; color:var(--ink-2); margin:0 4px 8px; }
+.plist{ display:flex; flex-direction:column; gap:8px; }
+.prow{
+  display:flex; align-items:center; gap:11px; padding:11px 13px;
+  background:var(--surface); border-radius:var(--r-md); box-shadow:0 1px 3px rgba(15,35,52,.08);
+}
+.prow.off{ opacity:.55; }
+.prow .pname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:15.5px; font-weight:800; }
+.prow .prec{ font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums; flex:none; }
+.switch{
+  width:52px; height:30px; border-radius:999px; background:var(--surface-2);
+  position:relative; flex:none; transition:background-color .18s ease;
+  border:1px solid var(--line);
+}
+.switch::after{
+  content:""; position:absolute; top:2px; left:2px; width:24px; height:24px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25);
+  transition:transform .18s cubic-bezier(.16,1,.3,1);
+}
+.switch.on{ background:var(--court); border-color:var(--court); }
+.switch.on::after{ transform:translateX(22px); }
+.delx{
+  width:34px; height:34px; border-radius:50%; color:var(--ink-3); flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+  transition:transform .1s ease, color .15s ease, background-color .15s ease;
+}
+.delx:active{ transform:scale(.88); }
+@media(hover:hover){ .delx:hover{ background:var(--danger-soft); color:var(--danger); } }
+.confirm-del{ display:flex; gap:8px; align-items:center; flex:none; }
+.confirm-del button{ height:36px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:800; }
+.confirm-del .yes{ background:var(--danger); color:#fff; }
+.confirm-del .no{ background:var(--surface-2); color:var(--ink-2); }
+
+/* ============ stats ============ */
+.stats-table{ width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.stats-table th{
+  font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); text-align:right; padding:10px 8px; border-bottom:1px solid var(--line);
+}
+.stats-table th.l{ text-align:left; }
+.stats-table td{ padding:11px 8px; border-bottom:1px solid var(--line); text-align:right; font-size:14px; }
+.stats-table tr:last-child td{ border-bottom:0; }
+.stats-table td.l{ text-align:left; }
+.rankn{ display:inline-flex; width:22px; height:22px; border-radius:50%; align-items:center; justify-content:center; font-size:11.5px; font-weight:800; color:var(--ink-3); background:var(--surface-2); margin-right:9px; vertical-align:-5px; }
+.rankn.top1{ background:var(--volt); color:var(--volt-ink); }
+.sname{ font-weight:800; font-size:14.5px; }
+.wr{ font-weight:900; font-size:15px; }
+.wr.na{ color:var(--ink-3); font-weight:600; }
+.today-col{ color:var(--ink-2); font-size:13px; }
+.stats-card{ padding:4px 8px; }
+.danger-zone{ margin-top:22px; display:flex; flex-direction:column; gap:9px; }
+
+/* ============ toast ============ */
+#toast{
+  position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
+  background:var(--ink); color:var(--bg); font-size:13.5px; font-weight:700;
+  padding:10px 18px; border-radius:999px; box-shadow:var(--shadow-pop);
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  max-width:86vw; text-align:center; z-index:40;
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Doubles Splitter</span>
+      <h1>匹克球分隊</h1>
+    </div>
+    <div class="top-meta">
+      <span id="hdr-date"></span>
+      <span class="round-chip hidden" id="hdr-round"></span>
+    </div>
+  </header>
+
+  <div id="storage-warn" class="warn-strip hidden">⚠ 此瀏覽器無法保存資料 — 關閉頁面後紀錄會消失</div>
+
+  <main>
+    <!-- 對戰 -->
+    <section id="view-match">
+      <div class="card setup">
+        <div class="setup-row">
+          <div class="setup-block">
+            <span class="lbl">場地數</span>
+            <div class="stepper">
+              <button data-action="court-minus" aria-label="減少場地">−</button>
+              <span class="num" id="court-num">1</span>
+              <button data-action="court-plus" aria-label="增加場地">+</button>
+            </div>
+          </div>
+          <div class="setup-block">
+            <span class="lbl">分隊模式</span>
+            <div class="seg" id="mode-seg">
+              <button data-action="mode-random">隨機</button>
+              <button data-action="mode-balance">實力平衡</button>
+            </div>
+          </div>
+        </div>
+        <div class="setup-row">
+          <button class="chk" id="chk-repeat" data-action="toggle-repeat" role="switch">
+            <span class="box"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5 6 12l7.5-8"/></svg></span>
+            盡量避免重複搭檔與對手
+          </button>
+        </div>
+        <div class="cap-hint" id="cap-hint"></div>
+      </div>
+
+      <button class="btn-primary" id="btn-generate" data-action="generate">產生對戰</button>
+      <div class="btn-row hidden" id="round-actions">
+        <button class="btn-ghost" data-action="reshuffle">重洗本輪</button>
+        <button class="btn-ghost hidden" id="btn-undo" data-action="undo">復原上一筆</button>
+      </div>
+
+      <div id="round-area"></div>
+    </section>
+
+    <!-- 球員 -->
+    <section id="view-players" class="hidden">
+      <form class="addbar" id="add-form">
+        <input id="add-name" type="text" placeholder="輸入球員名字" maxlength="12" autocomplete="off" enterkeyhint="done">
+        <button type="submit">新增</button>
+      </form>
+      <div class="pcount" id="pcount"></div>
+      <div class="plist" id="plist"></div>
+      <div id="players-empty" class="card empty hidden">
+        <div class="big">還沒有球員</div>
+        <p>把今天出席的人加進來（至少 4 位），<br>回到「對戰」頁就能開打。</p>
+      </div>
+    </section>
+
+    <!-- 排行 -->
+    <section id="view-stats" class="hidden">
+      <div class="card stats-card">
+        <table class="stats-table" id="stats-table"></table>
+      </div>
+      <div id="stats-empty" class="card empty hidden">
+        <div class="big">還沒有比賽紀錄</div>
+        <p>產生對戰並記錄勝負後，<br>勝率排行會出現在這裡。</p>
+      </div>
+      <div class="danger-zone">
+        <button class="btn-ghost" data-action="reset-today">重設今日（歸零今日勝敗與輪替記憶）</button>
+        <button class="btn-ghost btn-danger-line" data-action="reset-all">全部重設（清空球員與所有紀錄）</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <div class="tabbar-inner">
+      <button class="tab" id="tab-match" data-action="tab" data-tab="match">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 12h17"/><path d="M12 4.5v2.2M12 17.3v2.2"/></svg>
+        對戰
+      </button>
+      <button class="tab" id="tab-players" data-action="tab" data-tab="players">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.2 14.2c2.3.2 4 1.7 4.4 4.3"/></svg>
+        球員
+      </button>
+      <button class="tab" id="tab-stats" data-action="tab" data-tab="stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12"/><path d="M12 20V5.5"/><path d="M19 20v-6"/></svg>
+        排行
+      </button>
+    </div>
+  </nav>
+
+  <div id="toast" role="status"></div>
+</div>
+
+<script>
+'use strict';
+/* ================= state ================= */
+const KEY = 'pickleball_v1';
+let storageOK = true;
+try { localStorage.setItem('__pb_t','1'); localStorage.removeItem('__pb_t'); } catch(e){ storageOK = false; }
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+const WD = ['日','一','二','三','四','五','六'];
+
+function freshState(){
+  return {
+    v: 1, nextId: 1, players: [],
+    settings: { courts: 1, mode: 'random', avoidRepeat: true },
+    session: { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} },
+    current: null, undo: []
+  };
+}
+let S = freshState();
+(function load(){
+  if(!storageOK) return;
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const p = JSON.parse(raw);
+      if(p && Array.isArray(p.players)) S = Object.assign(freshState(), p);
+    }
+  }catch(e){}
+})();
+/* migrate older saves (pre-mixing schema) */
+if(!S.session.opps) S.session.opps = {};
+if(!S.session.sitStreak){
+  S.session.sitStreak = {};
+  (S.session.satLast || []).forEach(id => S.session.sitStreak[id] = 1);
+}
+function save(){
+  if(!storageOK) return;
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+}
+/* new day → reset session rotation + today stats, keep cumulative */
+(function rollover(){
+  if(S.session.date !== todayStr()){
+    S.session = { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} };
+    S.current = null; S.undo = [];
+    S.players.forEach(p => { p.tw = 0; p.tl = 0; });
+    save();
+  }
+})();
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId = id => S.players.find(p => p.id === id);
+const pname = id => { const p = byId(id); return p ? p.name : '?'; };
+const games = p => p.w + p.l;
+const skill = id => { const p = byId(id); return p ? (p.w + 1) / (p.w + p.l + 2) : .5; };
+const pkey = (a,b) => a < b ? a + '|' + b : b + '|' + a;
+const pcount = (a,b) => S.session.partners[pkey(a,b)] || 0;
+const ocount = (a,b) => S.session.opps[pkey(a,b)] || 0;
+const stk = id => S.session.sitStreak[id] || 0;
+const partOf = id => S.session.part[id] || 0;
+const activePlayers = () => S.players.filter(p => p.active);
+const inCurrent = id => !!S.current && (
+  S.current.matches.some(m => m.a.includes(id) || m.b.includes(id)) || S.current.sitters.includes(id)
+);
+
+function shuffle(a){
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ================= match making ================= */
+function matchScore(A, B){
+  let s = 0;
+  if(S.settings.avoidRepeat){
+    s += (Math.pow(pcount(A[0],A[1]), 2) + Math.pow(pcount(B[0],B[1]), 2)) * 10;
+    for(const x of A) for(const y of B) s += Math.pow(ocount(x,y), 2) * 2;
+  }
+  if(S.settings.mode === 'balance'){
+    s += Math.abs(skill(A[0]) + skill(A[1]) - skill(B[0]) - skill(B[1])) * 6;
+  }
+  return s;
+}
+function buildMatches(ids){
+  const nC = ids.length / 4;
+  const K = (S.settings.mode === 'random' && !S.settings.avoidRepeat) ? 1 : 420;
+  let best = null, bestScore = Infinity;
+  for(let k = 0; k < K; k++){
+    const arr = shuffle(ids.slice());
+    const ms = []; let sc = 0;
+    for(let c = 0; c < nC; c++){
+      const f = arr.slice(c*4, c*4 + 4);
+      const opts = [
+        [[f[0],f[1]],[f[2],f[3]]],
+        [[f[0],f[2]],[f[1],f[3]]],
+        [[f[0],f[3]],[f[1],f[2]]]
+      ];
+      let bo = null, bs = Infinity;
+      for(const o of opts){
+        const v = matchScore(o[0], o[1]);
+        if(v < bs){ bs = v; bo = o; }
+      }
+      ms.push({ a: bo[0], b: bo[1], result: null });
+      sc += bs;
+    }
+    if(sc < bestScore){ bestScore = sc; best = ms; }
+    if(bestScore === 0) break;
+  }
+  return best;
+}
+/* commit finished round into rotation memory */
+function retire(){
+  const cur = S.current;
+  if(!cur) return;
+  cur.matches.forEach(m => {
+    m.a.concat(m.b).forEach(id => {
+      S.session.part[id] = (S.session.part[id] || 0) + 1;
+      S.session.sitStreak[id] = 0;
+    });
+    S.session.partners[pkey(m.a[0], m.a[1])] = pcount(m.a[0], m.a[1]) + 1;
+    S.session.partners[pkey(m.b[0], m.b[1])] = pcount(m.b[0], m.b[1]) + 1;
+    for(const x of m.a) for(const y of m.b) S.session.opps[pkey(x,y)] = ocount(x,y) + 1;
+  });
+  cur.sitters.forEach(id => { S.session.sitStreak[id] = stk(id) + 1; });
+}
+function generate(){
+  const act = activePlayers();
+  const nCourts = Math.min(S.settings.courts, Math.floor(act.length / 4));
+  if(nCourts < 1){ toast('至少需要 4 位出席球員'); return; }
+  retire();
+  const cap = nCourts * 4;
+  /* mixing selection: sit-streak >= 2 must play; others ranked by
+     games-played + jitter, current sitters get a bump (not a guarantee)
+     -> blocks dissolve, nobody sits 3 rounds in a row, games stay level */
+  const ranked = act.map(p => {
+      const s = stk(p.id);
+      return {
+        id: p.id,
+        must: s >= 2 ? 0 : 1,
+        key: partOf(p.id) + Math.random() * 1.2 - (s > 0 ? 0.35 : 0)
+      };
+    })
+    .sort((x,y) => x.must - y.must || x.key - y.key);
+  const playing = ranked.slice(0, cap).map(r => r.id);
+  const sitters = ranked.slice(cap).map(r => r.id);
+  S.session.round++;
+  S.current = { matches: buildMatches(playing), sitters };
+  S.undo = [];
+  save();
+  renderAll(true);
+}
+function reshuffle(){
+  if(!S.current) return;
+  if(S.current.matches.some(m => m.result)){ toast('本輪已記錄結果，無法重洗'); return; }
+  const ids = S.current.matches.flatMap(m => m.a.concat(m.b));
+  S.current.matches = buildMatches(ids);
+  save();
+  renderAll(true);
+}
+function record(ci, side){
+  const m = S.current && S.current.matches[ci];
+  if(!m || m.result) return;
+  m.result = side;
+  const winners = side === 'a' ? m.a : m.b;
+  const losers  = side === 'a' ? m.b : m.a;
+  winners.forEach(id => { const p = byId(id); if(p){ p.w++; p.tw = (p.tw||0) + 1; } });
+  losers.forEach(id => { const p = byId(id); if(p){ p.l++; p.tl = (p.tl||0) + 1; } });
+  S.undo.push({ ci, side });
+  save();
+  renderAll(false, ci);
+}
+function undoLast(){
+  const u = S.undo.pop();
+  if(!u){ toast('沒有可復原的結果'); return; }
+  const m = S.current.matches[u.ci];
+  const winners = u.side === 'a' ? m.a : m.b;
+  const losers  = u.side === 'a' ? m.b : m.a;
+  winners.forEach(id => { const p = byId(id); if(p){ p.w--; p.tw--; } });
+  losers.forEach(id => { const p = byId(id); if(p){ p.l--; p.tl--; } });
+  m.result = null;
+  save();
+  renderAll(false);
+  toast('已復原上一筆結果');
+}
+
+/* ================= players ================= */
+let confirmDelId = null;
+function addPlayer(name){
+  name = name.trim();
+  if(!name){ return; }
+  if(S.players.some(p => p.name === name)){ toast('已有同名球員'); return; }
+  S.players.push({ id: S.nextId++, name, w:0, l:0, tw:0, tl:0, active:true });
+  save();
+  renderAll(false);
+}
+function delPlayer(id){
+  if(inCurrent(id)){ toast('球員在本輪對戰中，先產生新一輪再刪'); confirmDelId = null; renderPlayers(); return; }
+  S.players = S.players.filter(p => p.id !== id);
+  confirmDelId = null;
+  save();
+  renderAll(false);
+}
+
+/* ================= resets ================= */
+function resetToday(){
+  S.session = { date: todayStr(), round: 0, part: {}, partners: {}, satLast: [] };
+  S.current = null; S.undo = [];
+  S.players.forEach(p => { p.tw = 0; p.tl = 0; });
+  save();
+  renderAll(false);
+  toast('今日輪替與統計已歸零');
+}
+function resetAll(){
+  S = freshState();
+  save();
+  renderAll(false);
+  toast('已全部重設');
+}
+
+/* ================= arm (two-tap confirm) ================= */
+function armBtn(btn, label, fn){
+  if(btn.dataset.armed){
+    clearTimeout(+btn.dataset.t);
+    delete btn.dataset.armed;
+    btn.classList.remove('armed');
+    fn();
+    return;
+  }
+  btn.dataset.armed = '1';
+  btn.dataset.orig = btn.textContent;
+  btn.textContent = label;
+  btn.classList.add('armed');
+  btn.dataset.t = setTimeout(() => {
+    btn.textContent = btn.dataset.orig;
+    btn.classList.remove('armed');
+    delete btn.dataset.armed;
+  }, 3000);
+}
+
+/* ================= render ================= */
+let curTab = null;
+function fmtDate(){
+  const d = new Date();
+  return (d.getMonth()+1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）';
+}
+function renderHeader(){
+  $('#hdr-date').textContent = fmtDate();
+  const rc = $('#hdr-round');
+  if(S.session.round > 0){ rc.textContent = '第 ' + S.session.round + ' 輪'; rc.classList.remove('hidden'); }
+  else rc.classList.add('hidden');
+}
+function renderSetup(){
+  $('#court-num').textContent = S.settings.courts;
+  const seg = $('#mode-seg');
+  seg.querySelector('[data-action="mode-random"]').classList.toggle('on', S.settings.mode === 'random');
+  seg.querySelector('[data-action="mode-balance"]').classList.toggle('on', S.settings.mode === 'balance');
+  const chk = $('#chk-repeat');
+  chk.classList.toggle('on', S.settings.avoidRepeat);
+  chk.setAttribute('aria-checked', S.settings.avoidRepeat);
+  const act = activePlayers();
+  const nCourts = Math.min(S.settings.courts, Math.floor(act.length / 4));
+  const hint = $('#cap-hint');
+  if(act.length < 4){
+    hint.textContent = '出席 ' + act.length + ' 人 — 至少要 4 人才能開打';
+  } else {
+    const cap = nCourts * 4;
+    const sit = act.length - cap;
+    hint.textContent = '出席 ' + act.length + ' 人 · ' + nCourts + ' 場地 → ' + cap + ' 人上場' + (sit > 0 ? '、' + sit + ' 人輪休' : '、無人輪休');
+  }
+}
+function courtHTML(m, ci, anim, flashCi){
+  const done = !!m.result;
+  const half = (side, ids) => {
+    const won = m.result === side;
+    const lost = done && !won;
+    const cls = 'half ' + (side === 'a' ? 'h-top' : 'h-bot') + (won ? ' winner' : '') + (lost ? ' loser' : '') + (won && ci === flashCi ? ' justwon' : '');
+    let action;
+    if(won) action = '<div class="wonmark">✓ 獲勝</div>';
+    else if(lost) action = '<div class="lostmark">落敗</div>';
+    else action = '<button class="winbtn" data-action="win" data-ci="' + ci + '" data-side="' + side + '">這隊獲勝</button>';
+    return '<div class="' + cls + '">' +
+      '<div class="team">' + ids.map(id => '<span class="pchip">' + esc(pname(id)) + '</span>').join('') + '</div>' +
+      action + '</div>';
+  };
+  return '<div class="court' + (anim ? ' deal' : '') + '" style="' + (anim ? 'animation-delay:' + (ci*70) + 'ms' : '') + '">' +
+    '<div class="court-head"><span class="court-name">場地 ' + (ci+1) + '</span>' +
+    '<span class="court-status' + (done ? ' done' : '') + '">' + (done ? '已記錄' : '進行中') + '</span></div>' +
+    '<div class="bounds">' + half('a', m.a) + '<div class="net"><span class="ball"></span></div>' + half('b', m.b) + '</div>' +
+  '</div>';
+}
+function renderRound(anim, flashCi){
+  const area = $('#round-area');
+  const actions = $('#round-actions');
+  const gbtn = $('#btn-generate');
+  if(gbtn.dataset.armed){
+    clearTimeout(+gbtn.dataset.t);
+    delete gbtn.dataset.armed;
+    gbtn.classList.remove('armed');
+  }
+  if(!S.current){
+    gbtn.textContent = '產生對戰';
+    actions.classList.add('hidden');
+    if(activePlayers().length < 4 && S.players.length > 0){
+      area.innerHTML = '<div class="card empty"><div class="big">出席人數不足</div><p>到「球員」頁把今天有來的人切成出席，<br>湊滿 4 位就能開打。</p></div>';
+    } else if(S.players.length === 0){
+      area.innerHTML = '<div class="card empty"><div class="big">先建立球員名單</div><p>到「球員」頁把今天出席的人加進來，<br>至少 4 位。</p></div>';
+    } else {
+      area.innerHTML = '';
+    }
+    return;
+  }
+  gbtn.textContent = '產生下一輪';
+  actions.classList.remove('hidden');
+  $('#btn-undo').classList.toggle('hidden', S.undo.length === 0);
+  const multi = S.current.matches.length > 1;
+  let html = '<div class="courts' + (multi ? ' multi' : '') + '">' +
+    S.current.matches.map((m,i) => courtHTML(m, i, anim, flashCi)).join('') + '</div>';
+  if(S.current.sitters.length){
+    html += '<div class="card sitters' + (anim ? ' deal' : '') + '"' + (anim ? ' style="animation-delay:' + (S.current.matches.length*70) + 'ms"' : '') + '>' +
+      '<div class="sit-head"><span class="t">本輪輪休</span><span class="n">下一輪優先上場</span></div>' +
+      '<div class="sit-chips">' + S.current.sitters.map(id => '<span class="schip">' + esc(pname(id)) + '</span>').join('') + '</div></div>';
+  }
+  area.innerHTML = html;
+}
+function renderPlayers(){
+  const act = activePlayers().length;
+  $('#pcount').textContent = S.players.length ? ('出席 ' + act + ' 人 / 共 ' + S.players.length + ' 人 — 點開關切換今天是否出席') : '';
+  $('#players-empty').classList.toggle('hidden', S.players.length > 0);
+  $('#plist').innerHTML = S.players.map(p => {
+    const g = games(p);
+    const rec = g ? (p.w + ' 勝 ' + p.l + ' 敗') : '尚無紀錄';
+    let right;
+    if(confirmDelId === p.id){
+      right = '<span class="confirm-del"><button class="yes" data-action="del-yes" data-id="' + p.id + '">刪除</button><button class="no" data-action="del-no">取消</button></span>';
+    } else {
+      right = '<button class="switch' + (p.active ? ' on' : '') + '" data-action="toggle-active" data-id="' + p.id + '" role="switch" aria-checked="' + p.active + '" aria-label="' + esc(p.name) + ' 出席"></button>' +
+        '<button class="delx" data-action="del-ask" data-id="' + p.id + '" aria-label="刪除 ' + esc(p.name) + '">✕</button>';
+    }
+    return '<div class="prow' + (p.active ? '' : ' off') + '">' +
+      '<span class="pname">' + esc(p.name) + '</span>' +
+      '<span class="prec">' + rec + '</span>' + right + '</div>';
+  }).join('');
+}
+function renderStats(){
+  const played = S.players.filter(p => games(p) > 0);
+  const idle = S.players.filter(p => games(p) === 0);
+  played.sort((a,b) => (b.w/games(b)) - (a.w/games(a)) || games(b) - games(a) || a.name.localeCompare(b.name,'zh-Hant'));
+  const rows = played.concat(idle);
+  $('#stats-empty').classList.toggle('hidden', played.length > 0);
+  $('#stats-table').parentElement.classList.toggle('hidden', played.length === 0);
+  if(!played.length){ return; }
+  let html = '<thead><tr><th class="l">球員</th><th>今日</th><th>勝-敗</th><th>勝率</th></tr></thead><tbody>';
+  rows.forEach((p, i) => {
+    const g = games(p);
+    const wr = g ? Math.round(p.w / g * 100) + '%' : '—';
+    const rank = g ? '<span class="rankn' + (i === 0 ? ' top1' : '') + '">' + (i+1) + '</span>' : '<span class="rankn">·</span>';
+    html += '<tr><td class="l">' + rank + '<span class="sname">' + esc(p.name) + '</span></td>' +
+      '<td class="today-col">' + (p.tw||0) + '–' + (p.tl||0) + '</td>' +
+      '<td>' + p.w + '–' + p.l + '</td>' +
+      '<td><span class="wr' + (g ? '' : ' na') + '">' + wr + '</span></td></tr>';
+  });
+  $('#stats-table').innerHTML = html + '</tbody>';
+}
+function setTab(t){
+  curTab = t;
+  ['match','players','stats'].forEach(k => {
+    $('#view-' + k).classList.toggle('hidden', k !== t);
+    $('#tab-' + k).classList.toggle('on', k === t);
+  });
+  confirmDelId = null;
+  renderAll(false);
+}
+function renderAll(anim, flashCi){
+  renderHeader();
+  renderSetup();
+  renderRound(anim, flashCi);
+  renderPlayers();
+  renderStats();
+}
+
+/* ================= events ================= */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const a = el.dataset.action;
+  if(a === 'tab') setTab(el.dataset.tab);
+  else if(a === 'court-minus'){ if(S.settings.courts > 1){ S.settings.courts--; save(); renderSetup(); } }
+  else if(a === 'court-plus'){ if(S.settings.courts < 6){ S.settings.courts++; save(); renderSetup(); } }
+  else if(a === 'mode-random'){ S.settings.mode = 'random'; save(); renderSetup(); }
+  else if(a === 'mode-balance'){ S.settings.mode = 'balance'; save(); renderSetup(); }
+  else if(a === 'toggle-repeat'){ S.settings.avoidRepeat = !S.settings.avoidRepeat; save(); renderSetup(); }
+  else if(a === 'generate'){
+    const un = S.current ? S.current.matches.filter(m => !m.result).length : 0;
+    if(un > 0) armBtn(el, '有 ' + un + ' 場未記錄 — 再按一次直接開新一輪', generate);
+    else generate();
+  }
+  else if(a === 'reshuffle') reshuffle();
+  else if(a === 'undo') undoLast();
+  else if(a === 'win') record(+el.dataset.ci, el.dataset.side);
+  else if(a === 'toggle-active'){ const p = byId(+el.dataset.id); if(p){ p.active = !p.active; save(); renderAll(false); } }
+  else if(a === 'del-ask'){ confirmDelId = +el.dataset.id; renderPlayers(); }
+  else if(a === 'del-no'){ confirmDelId = null; renderPlayers(); }
+  else if(a === 'del-yes') delPlayer(+el.dataset.id);
+  else if(a === 'reset-today') armBtn(el, '再按一次確認歸零今日', resetToday);
+  else if(a === 'reset-all') armBtn(el, '再按一次確認清空全部', resetAll);
+});
+$('#add-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = $('#add-name');
+  addPlayer(inp.value);
+  inp.value = '';
+  inp.focus();
+});
+
+/* ================= boot ================= */
+if(!storageOK) $('#storage-warn').classList.remove('hidden');
+setTab(S.players.length ? 'match' : 'players');
+</script>
