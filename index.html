@@ -493,7 +493,7 @@ function freshState(){
   return {
     v: 1, nextId: 1, players: [],
     settings: { courts: 1, mode: 'random', avoidRepeat: true },
-    session: { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} },
+    session: { date: todayStr(), round: 0, partners: {}, opps: {}, sitStreak: {} },
     current: null, undo: []
   };
 }
@@ -508,30 +508,57 @@ let S = freshState();
     }
   }catch(e){}
 })();
-/* migrate older saves (pre-mixing schema) */
-if(!S.session.opps) S.session.opps = {};
-if(!S.session.sitStreak){
-  S.session.sitStreak = {};
-  (S.session.satLast || []).forEach(id => S.session.sitStreak[id] = 1);
+/* migrate + sanitize older or malformed saves; a broken save must never
+   brick the app — worst case we fall back to a fresh state */
+function sanitizeState(){
+try {
+  if(!S.settings || typeof S.settings !== 'object') S.settings = freshState().settings;
+  if(!S.session || typeof S.session !== 'object') S.session = freshState().session;
+  if(!S.session.opps) S.session.opps = {};
+  if(!S.session.sitStreak){
+    S.session.sitStreak = {};
+    (S.session.satLast || []).forEach(id => S.session.sitStreak[id] = 1);
+  }
+  S.players = S.players.filter(x => x && typeof x === 'object');
+  S.players.forEach(p => {
+    p.id = +p.id || 0;
+    p.name = String(p.name == null ? '?' : p.name);
+    p.active = !!p.active;
+    ['w','l','tw','tl','pf','pa','gs','tpf','tpa','tgs'].forEach(k => { p[k] = Number.isFinite(+p[k]) ? +p[k] : 0; });
+  });
+  if(!Array.isArray(S.undo)) S.undo = [];
+  S.undo = S.undo.filter(u => u && typeof u.ci === 'number');
+  if(S.current){
+    const ms = S.current.matches;
+    if(!Array.isArray(ms) || !Array.isArray(S.current.sitters) || ms.some(m => !m || !Array.isArray(m.a) || !Array.isArray(m.b))){
+      S.current = null;
+    } else ms.forEach(m => {
+      if(m.sa != null){
+        m.sa = +m.sa; m.sb = +m.sb;
+        if(!Number.isFinite(m.sa) || !Number.isFinite(m.sb)){ delete m.sa; delete m.sb; }
+      }
+    });
+  }
+} catch(e){ S = freshState(); }
 }
-/* migrate saves from before score tracking */
-S.players.forEach(p => {
-  if(p.pf == null){ p.pf = 0; p.pa = 0; p.gs = 0; }
-  if(p.tpf == null){ p.tpf = 0; p.tpa = 0; p.tgs = 0; }
-});
+sanitizeState();
 function save(){
   if(!storageOK) return;
   try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
 }
-/* new day → reset session rotation + today stats, keep cumulative */
-(function rollover(){
-  if(S.session.date !== todayStr()){
-    S.session = { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} };
-    S.current = null; S.undo = [];
-    S.players.forEach(p => { p.tw = 0; p.tl = 0; p.tpf = 0; p.tpa = 0; p.tgs = 0; });
-    save();
-  }
-})();
+/* new day → reset session rotation + today stats, keep cumulative.
+   Re-checked on resume and before each round: an installed app can sit
+   suspended in the background across midnight without ever reloading. */
+function dayCheck(){
+  if(S.session.date === todayStr()) return;
+  S.session = { date: todayStr(), round: 0, partners: {}, opps: {}, sitStreak: {} };
+  S.current = null; S.undo = [];
+  S.players.forEach(p => { p.tw = 0; p.tl = 0; p.tpf = 0; p.tpa = 0; p.tgs = 0; });
+  save();
+  renderAll(false);
+}
+dayCheck();
+document.addEventListener('visibilitychange', () => { if(!document.hidden) dayCheck(); });
 
 /* ================= helpers ================= */
 const $ = s => document.querySelector(s);
@@ -544,7 +571,6 @@ const pkey = (a,b) => a < b ? a + '|' + b : b + '|' + a;
 const pcount = (a,b) => S.session.partners[pkey(a,b)] || 0;
 const ocount = (a,b) => S.session.opps[pkey(a,b)] || 0;
 const stk = id => S.session.sitStreak[id] || 0;
-const partOf = id => S.session.part[id] || 0;
 const activePlayers = () => S.players.filter(p => p.active);
 const inCurrent = id => !!S.current && (
   S.current.matches.some(m => m.a.includes(id) || m.b.includes(id)) || S.current.sitters.includes(id)
@@ -612,7 +638,6 @@ function retire(){
   if(!cur) return;
   cur.matches.forEach(m => {
     m.a.concat(m.b).forEach(id => {
-      S.session.part[id] = (S.session.part[id] || 0) + 1;
       S.session.sitStreak[id] = 0;
     });
     S.session.partners[pkey(m.a[0], m.a[1])] = pcount(m.a[0], m.a[1]) + 1;
@@ -622,6 +647,7 @@ function retire(){
   cur.sitters.forEach(id => { S.session.sitStreak[id] = stk(id) + 1; });
 }
 function generate(){
+  dayCheck();
   const act = activePlayers();
   const nCourts = Math.min(S.settings.courts, Math.floor(act.length / 4));
   if(nCourts < 1){ toast('至少需要 4 位出席球員'); return; }
@@ -714,7 +740,7 @@ function delPlayer(id){
 
 /* ================= resets ================= */
 function resetToday(){
-  S.session = { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} };
+  S.session = { date: todayStr(), round: 0, partners: {}, opps: {}, sitStreak: {} };
   S.current = null; S.undo = [];
   S.players.forEach(p => { p.tw = 0; p.tl = 0; p.tpf = 0; p.tpa = 0; p.tgs = 0; });
   save();
@@ -755,7 +781,7 @@ function fmtDate(){
   return (d.getMonth()+1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）';
 }
 function renderHeader(){
-  $('#hdr-date').textContent = fmtDate() + ' · v3';
+  $('#hdr-date').textContent = fmtDate() + ' · v4';
   const rc = $('#hdr-round');
   if(S.session.round > 0){ rc.textContent = '第 ' + S.session.round + ' 輪'; rc.classList.remove('hidden'); }
   else rc.classList.add('hidden');
