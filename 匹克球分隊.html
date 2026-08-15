@@ -587,15 +587,16 @@ function generate(){
   if(nCourts < 1){ toast('至少需要 4 位出席球員'); return; }
   retire();
   const cap = nCourts * 4;
-  /* mixing selection: sit-streak >= 2 must play; others ranked by
-     games-played + jitter, current sitters get a bump (not a guarantee)
-     -> blocks dissolve, nobody sits 3 rounds in a row, games stay level */
+  /* rotation selection: whoever sat out last round is guaranteed to play;
+     sitters are drawn at random from everyone else. If sitters outnumber
+     the court capacity, longer sit-streaks go first. No games-played bias,
+     so latecomers simply join the normal rotation. */
   const ranked = act.map(p => {
       const s = stk(p.id);
       return {
         id: p.id,
-        must: s >= 2 ? 0 : 1,
-        key: partOf(p.id) + Math.random() * 1.2 - (s > 0 ? 0.35 : 0)
+        must: s > 0 ? 0 : 1,
+        key: -s + Math.random()
       };
     })
     .sort((x,y) => x.must - y.must || x.key - y.key);
