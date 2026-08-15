@@ -755,7 +755,7 @@ function fmtDate(){
   return (d.getMonth()+1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）';
 }
 function renderHeader(){
-  $('#hdr-date').textContent = fmtDate();
+  $('#hdr-date').textContent = fmtDate() + ' · v3';
   const rc = $('#hdr-round');
   if(S.session.round > 0){ rc.textContent = '第 ' + S.session.round + ' 輪'; rc.classList.remove('hidden'); }
   else rc.classList.add('hidden');

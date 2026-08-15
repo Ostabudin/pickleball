@@ -1,5 +1,5 @@
 /* 匹克球分隊 offline cache — bump CACHE version on each release */
-const CACHE = 'pb-v2';
+const CACHE = 'pb-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,8 +17,10 @@ self.addEventListener('activate', e => {
 /* pages: network first (updates flow in), cached copy when offline; assets: cache first */
 self.addEventListener('fetch', e => {
   if(e.request.mode === 'navigate' || e.request.destination === 'document'){
+    /* cache:'no-cache' forces a server revalidation every open, so releases
+       are picked up immediately instead of after the CDN's 10-min max-age */
     e.respondWith(
-      fetch(e.request).then(r => {
+      fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' }).then(r => {
         const copy = r.clone();
         caches.open(CACHE).then(c => c.put('./index.html', copy));
         return r;
