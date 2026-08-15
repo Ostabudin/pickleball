@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#eef1f4">
 <title>匹克球分隊</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="匹克球分隊">
 </head>
 <body>
 <style>
@@ -963,6 +969,10 @@ $('#add-form').addEventListener('submit', e => {
 /* ================= boot ================= */
 if(!storageOK) $('#storage-warn').classList.remove('hidden');
 setTab(S.players.length ? 'match' : 'players');
+/* offline support when served over http(s); no-op for local file usage */
+if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  navigator.serviceWorker.register('sw.js');
+}
 </script>
 </body>
 </html>
