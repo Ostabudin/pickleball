@@ -627,16 +627,17 @@ function generate(){
   if(nCourts < 1){ toast('至少需要 4 位出席球員'); return; }
   retire();
   const cap = nCourts * 4;
-  /* rotation selection: whoever sat out last round is guaranteed to play;
-     sitters are drawn at random from everyone else. If sitters outnumber
-     the court capacity, longer sit-streaks go first. No games-played bias,
-     so latecomers simply join the normal rotation. */
+  /* rotation selection: sitting last round gives a strong (not absolute)
+     priority draw, so lineups keep mixing even when the sitters exactly
+     fill the courts (e.g. 8 players / 1 court would otherwise flip-flop
+     between two fixed groups). Sitting 2 rounds in a row is a hard
+     guarantee to play; no games-played bias, latecomers just join in. */
   const ranked = act.map(p => {
       const s = stk(p.id);
       return {
         id: p.id,
-        must: s > 0 ? 0 : 1,
-        key: -s + Math.random()
+        must: s >= 2 ? 0 : 1,
+        key: Math.random() - (s > 0 ? 0.3 : 0)
       };
     })
     .sort((x,y) => x.must - y.must || x.key - y.key);

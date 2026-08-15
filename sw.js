@@ -1,5 +1,5 @@
 /* 匹克球分隊 offline cache — bump CACHE version on each release */
-const CACHE = 'pb-v1';
+const CACHE = 'pb-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
