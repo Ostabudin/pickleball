@@ -191,6 +191,35 @@ input{ font:inherit; color:inherit; }
 .btn-ghost.armed{ background:var(--danger); border-color:var(--danger); color:#fff; }
 .btn-danger-line{ color:var(--danger); }
 
+/* ============ score quick-entry ============ */
+.scorebox{ display:flex; flex-direction:column; gap:10px; align-items:center; padding:2px 0 4px; }
+.scorebox .sq{ color:var(--on-court); font-size:13px; font-weight:800; text-align:center; }
+.scorebox .sq b{ color:var(--volt); }
+.score-grid{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; max-width:300px; }
+.score-grid button{
+  width:40px; height:40px; border-radius:999px;
+  background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.35);
+  color:var(--on-court); font-size:15px; font-weight:800;
+  transition:transform .1s ease, background-color .15s ease;
+}
+.score-grid button:active{ transform:scale(.9); }
+@media(hover:hover){ .score-grid button:hover{ background:rgba(255,255,255,.24); } }
+.score-aux{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.score-aux button{
+  height:34px; padding:0 14px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.3); color:var(--on-court-dim);
+  font-size:12.5px; font-weight:700;
+}
+.score-aux button:active{ transform:scale(.95); }
+.score-custom{ display:flex; gap:8px; align-items:center; }
+.score-custom input{
+  width:64px; height:44px; text-align:center; border-radius:10px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.4);
+  color:var(--on-court); font-size:18px; font-weight:800;
+}
+.score-custom .vs{ color:var(--on-court-dim); font-weight:800; }
+.score-custom button{ height:44px; padding:0 16px; border-radius:999px; border:1.5px solid rgba(255,255,255,.55); color:var(--on-court); font-size:14px; font-weight:800; }
+
 /* ============ court card ============ */
 .courts{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:16px; }
 @media(min-width:540px){ .courts.multi{ grid-template-columns:1fr 1fr; } }
@@ -479,6 +508,11 @@ if(!S.session.sitStreak){
   S.session.sitStreak = {};
   (S.session.satLast || []).forEach(id => S.session.sitStreak[id] = 1);
 }
+/* migrate saves from before score tracking */
+S.players.forEach(p => {
+  if(p.pf == null){ p.pf = 0; p.pa = 0; p.gs = 0; }
+  if(p.tpf == null){ p.tpf = 0; p.tpa = 0; p.tgs = 0; }
+});
 function save(){
   if(!storageOK) return;
   try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
@@ -488,7 +522,7 @@ function save(){
   if(S.session.date !== todayStr()){
     S.session = { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} };
     S.current = null; S.undo = [];
-    S.players.forEach(p => { p.tw = 0; p.tl = 0; });
+    S.players.forEach(p => { p.tw = 0; p.tl = 0; p.tpf = 0; p.tpa = 0; p.tgs = 0; });
     save();
   }
 })();
@@ -603,6 +637,7 @@ function generate(){
   const playing = ranked.slice(0, cap).map(r => r.id);
   const sitters = ranked.slice(cap).map(r => r.id);
   S.session.round++;
+  scorePick = null;
   S.current = { matches: buildMatches(playing), sitters };
   S.undo = [];
   save();
@@ -613,17 +648,22 @@ function reshuffle(){
   if(S.current.matches.some(m => m.result)){ toast('本輪已記錄結果，無法重洗'); return; }
   const ids = S.current.matches.flatMap(m => m.a.concat(m.b));
   S.current.matches = buildMatches(ids);
+  scorePick = null;
   save();
   renderAll(true);
 }
-function record(ci, side){
+function record(ci, side, sa, sb){
   const m = S.current && S.current.matches[ci];
   if(!m || m.result) return;
   m.result = side;
+  const scored = sa != null;
+  if(scored){ m.sa = sa; m.sb = sb; }
   const winners = side === 'a' ? m.a : m.b;
   const losers  = side === 'a' ? m.b : m.a;
-  winners.forEach(id => { const p = byId(id); if(p){ p.w++; p.tw = (p.tw||0) + 1; } });
-  losers.forEach(id => { const p = byId(id); if(p){ p.l++; p.tl = (p.tl||0) + 1; } });
+  const wpts = side === 'a' ? sa : sb, lpts = side === 'a' ? sb : sa;
+  winners.forEach(id => { const p = byId(id); if(p){ p.w++; p.tw = (p.tw||0) + 1; if(scored){ p.pf += wpts; p.pa += lpts; p.gs++; p.tpf += wpts; p.tpa += lpts; p.tgs++; } } });
+  losers.forEach(id => { const p = byId(id); if(p){ p.l++; p.tl = (p.tl||0) + 1; if(scored){ p.pf += lpts; p.pa += wpts; p.gs++; p.tpf += lpts; p.tpa += wpts; p.tgs++; } } });
+  scorePick = null;
   S.undo.push({ ci, side });
   save();
   renderAll(false, ci);
@@ -634,9 +674,13 @@ function undoLast(){
   const m = S.current.matches[u.ci];
   const winners = u.side === 'a' ? m.a : m.b;
   const losers  = u.side === 'a' ? m.b : m.a;
-  winners.forEach(id => { const p = byId(id); if(p){ p.w--; p.tw--; } });
-  losers.forEach(id => { const p = byId(id); if(p){ p.l--; p.tl--; } });
+  const scored = m.sa != null;
+  const wpts = u.side === 'a' ? m.sa : m.sb, lpts = u.side === 'a' ? m.sb : m.sa;
+  winners.forEach(id => { const p = byId(id); if(p){ p.w--; p.tw--; if(scored){ p.pf -= wpts; p.pa -= lpts; p.gs--; p.tpf -= wpts; p.tpa -= lpts; p.tgs--; } } });
+  losers.forEach(id => { const p = byId(id); if(p){ p.l--; p.tl--; if(scored){ p.pf -= lpts; p.pa -= wpts; p.gs--; p.tpf -= lpts; p.tpa -= wpts; p.tgs--; } } });
   m.result = null;
+  delete m.sa; delete m.sb;
+  scorePick = null;
   save();
   renderAll(false);
   toast('已復原上一筆結果');
@@ -644,11 +688,12 @@ function undoLast(){
 
 /* ================= players ================= */
 let confirmDelId = null;
+let scorePick = null; /* {ci, side, custom} while entering a score */
 function addPlayer(name){
   name = name.trim();
   if(!name){ return; }
   if(S.players.some(p => p.name === name)){ toast('已有同名球員'); return; }
-  S.players.push({ id: S.nextId++, name, w:0, l:0, tw:0, tl:0, active:true });
+  S.players.push({ id: S.nextId++, name, w:0, l:0, tw:0, tl:0, pf:0, pa:0, gs:0, tpf:0, tpa:0, tgs:0, active:true });
   save();
   renderAll(false);
 }
@@ -662,9 +707,9 @@ function delPlayer(id){
 
 /* ================= resets ================= */
 function resetToday(){
-  S.session = { date: todayStr(), round: 0, part: {}, partners: {}, satLast: [] };
+  S.session = { date: todayStr(), round: 0, part: {}, partners: {}, opps: {}, sitStreak: {} };
   S.current = null; S.undo = [];
-  S.players.forEach(p => { p.tw = 0; p.tl = 0; });
+  S.players.forEach(p => { p.tw = 0; p.tl = 0; p.tpf = 0; p.tpa = 0; p.tgs = 0; });
   save();
   renderAll(false);
   toast('今日輪替與統計已歸零');
@@ -729,13 +774,38 @@ function renderSetup(){
 }
 function courtHTML(m, ci, anim, flashCi){
   const done = !!m.result;
+  const hasScore = m.sa != null;
+  const picking = !!scorePick && scorePick.ci === ci;
+  const pickerHTML = side => {
+    const loserNames = (side === 'a' ? m.b : m.a).map(id => esc(pname(id))).join('、');
+    const aux = '<button data-action="score-skip" data-ci="' + ci + '" data-side="' + side + '">不記分</button>' +
+      '<button data-action="score-cancel">取消</button>';
+    if(scorePick.custom){
+      return '<div class="scorebox">' +
+        '<div class="sq">輸入比分(<b>勝方</b> : 敗方)</div>' +
+        '<div class="score-custom">' +
+        '<input id="sc-w" type="number" inputmode="numeric" min="0" value="11">' +
+        '<span class="vs">:</span>' +
+        '<input id="sc-l" type="number" inputmode="numeric" min="0" placeholder="?">' +
+        '<button data-action="score-confirm" data-ci="' + ci + '" data-side="' + side + '">確定</button></div>' +
+        '<div class="score-aux"><button data-action="score-simple">快速選分</button>' + aux + '</div></div>';
+    }
+    let nums = '';
+    for(let n = 0; n <= 10; n++) nums += '<button data-action="score-n" data-n="' + n + '" data-ci="' + ci + '" data-side="' + side + '">' + n + '</button>';
+    return '<div class="scorebox">' +
+      '<div class="sq">' + loserNames + ' 得幾分?(勝方 11 分)</div>' +
+      '<div class="score-grid">' + nums + '</div>' +
+      '<div class="score-aux"><button data-action="score-other">其他比分</button>' + aux + '</div></div>';
+  };
   const half = (side, ids) => {
     const won = m.result === side;
     const lost = done && !won;
+    const my = side === 'a' ? m.sa : m.sb, op = side === 'a' ? m.sb : m.sa;
     const cls = 'half ' + (side === 'a' ? 'h-top' : 'h-bot') + (won ? ' winner' : '') + (lost ? ' loser' : '') + (won && ci === flashCi ? ' justwon' : '');
     let action;
-    if(won) action = '<div class="wonmark">✓ 獲勝</div>';
-    else if(lost) action = '<div class="lostmark">落敗</div>';
+    if(won) action = '<div class="wonmark">✓ 獲勝' + (hasScore ? ' ' + my + '–' + op : '') + '</div>';
+    else if(lost) action = '<div class="lostmark">落敗' + (hasScore ? ' ' + my + '–' + op : '') + '</div>';
+    else if(picking) action = scorePick.side === side ? pickerHTML(side) : '';
     else action = '<button class="winbtn" data-action="win" data-ci="' + ci + '" data-side="' + side + '">這隊獲勝</button>';
     return '<div class="' + cls + '">' +
       '<div class="team">' + ids.map(id => '<span class="pchip">' + esc(pname(id)) + '</span>').join('') + '</div>' +
@@ -807,16 +877,19 @@ function renderStats(){
   const rows = played.concat(idle);
   $('#stats-empty').classList.toggle('hidden', played.length > 0);
   $('#stats-table').parentElement.classList.toggle('hidden', played.length === 0);
-  if(!played.length){ return; }
-  let html = '<thead><tr><th class="l">球員</th><th>今日</th><th>勝-敗</th><th>勝率</th></tr></thead><tbody>';
+  if(!played.length){ $('#stats-table').innerHTML = ''; return; }
+  let html = '<thead><tr><th class="l">球員</th><th>今日</th><th>勝-敗</th><th>勝率</th><th>今日+/-</th></tr></thead><tbody>';
   rows.forEach((p, i) => {
     const g = games(p);
     const wr = g ? Math.round(p.w / g * 100) + '%' : '—';
+    const d = p.tgs ? Math.round((p.tpf - p.tpa) / p.tgs * 10) / 10 : null;
+    const avgTxt = d == null ? '—' : (d > 0 ? '+' : '') + d.toFixed(1);
     const rank = g ? '<span class="rankn' + (i === 0 ? ' top1' : '') + '">' + (i+1) + '</span>' : '<span class="rankn">·</span>';
     html += '<tr><td class="l">' + rank + '<span class="sname">' + esc(p.name) + '</span></td>' +
       '<td class="today-col">' + (p.tw||0) + '–' + (p.tl||0) + '</td>' +
       '<td>' + p.w + '–' + p.l + '</td>' +
-      '<td><span class="wr' + (g ? '' : ' na') + '">' + wr + '</span></td></tr>';
+      '<td><span class="wr' + (g ? '' : ' na') + '">' + wr + '</span></td>' +
+      '<td class="avg">' + avgTxt + '</td></tr>';
   });
   $('#stats-table').innerHTML = html + '</tbody>';
 }
@@ -827,6 +900,7 @@ function setTab(t){
     $('#tab-' + k).classList.toggle('on', k === t);
   });
   confirmDelId = null;
+  scorePick = null;
   renderAll(false);
 }
 function renderAll(anim, flashCi){
@@ -855,7 +929,22 @@ document.addEventListener('click', e => {
   }
   else if(a === 'reshuffle') reshuffle();
   else if(a === 'undo') undoLast();
-  else if(a === 'win') record(+el.dataset.ci, el.dataset.side);
+  else if(a === 'win'){ scorePick = { ci: +el.dataset.ci, side: el.dataset.side }; renderRound(false); }
+  else if(a === 'score-n'){
+    const side = el.dataset.side, n = +el.dataset.n;
+    record(+el.dataset.ci, side, side === 'a' ? 11 : n, side === 'a' ? n : 11);
+  }
+  else if(a === 'score-skip') record(+el.dataset.ci, el.dataset.side);
+  else if(a === 'score-cancel'){ scorePick = null; renderRound(false); }
+  else if(a === 'score-other'){ scorePick.custom = true; renderRound(false); }
+  else if(a === 'score-simple'){ scorePick.custom = false; renderRound(false); }
+  else if(a === 'score-confirm'){
+    const side = el.dataset.side;
+    const w = parseInt($('#sc-w').value, 10), l = parseInt($('#sc-l').value, 10);
+    if(isNaN(w) || isNaN(l) || w < 0 || l < 0){ toast('請輸入兩隊的分數'); return; }
+    if(w <= l){ toast('勝方分數要高於敗方'); return; }
+    record(+el.dataset.ci, side, side === 'a' ? w : l, side === 'a' ? l : w);
+  }
   else if(a === 'toggle-active'){ const p = byId(+el.dataset.id); if(p){ p.active = !p.active; save(); renderAll(false); } }
   else if(a === 'del-ask'){ confirmDelId = +el.dataset.id; renderPlayers(); }
   else if(a === 'del-no'){ confirmDelId = null; renderPlayers(); }
